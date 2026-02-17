@@ -1,0 +1,209 @@
+"""
+FastAPI Backend for Player Churn Prediction System.
+Provides REST endpoints for the Next.js frontend.
+"""
+
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+import pandas as pd
+import numpy as np
+import joblib
+import os
+import sys
+
+# ---------------------------------------------------------------------------
+# Path setup — so we can import the existing ML modules
+# ---------------------------------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
+
+from backend.ml.feature_engineering import run_feature_engineering
+from backend.ml.preprocess import MODELS_DIR
+
+# ---------------------------------------------------------------------------
+# FastAPI app
+# ---------------------------------------------------------------------------
+app = FastAPI(
+    title="Player Churn Prediction API",
+    description="ML-powered API to predict player churn risk in online games",
+    version="1.0.0",
+)
+
+# CORS — allow Next.js dev server & production origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ---------------------------------------------------------------------------
+# Load model artifacts once at startup
+# ---------------------------------------------------------------------------
+model = None
+scaler = None
+label_encoders = None
+feature_names = None
+
+
+@app.on_event("startup")
+def load_artifacts():
+    """Load ML artifacts into memory when the server starts."""
+    global model, scaler, label_encoders, feature_names
+    try:
+        model = joblib.load(os.path.join(MODELS_DIR, "churn_model.pkl"))
+        scaler = joblib.load(os.path.join(MODELS_DIR, "scaler.pkl"))
+        label_encoders = joblib.load(os.path.join(MODELS_DIR, "label_encoders.pkl"))
+        feature_names = joblib.load(os.path.join(MODELS_DIR, "feature_names.pkl"))
+        print(f"✅ Model loaded — {len(feature_names)} features")
+    except Exception as e:
+        print(f"⚠️  Could not load model artifacts: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Pydantic schemas
+# ---------------------------------------------------------------------------
+class PlayerInput(BaseModel):
+    """Raw player data sent from the frontend (6 user-facing fields)."""
+    Age: int = Field(..., ge=15, le=65, description="Player age")
+    Gender: str = Field(..., description="Male / Female")
+    Location: str = Field(..., description="USA / Europe / Asia / Other")
+    GameGenre: str = Field(..., description="Action / RPG / Strategy / Sports / Simulation")
+    PlayTimeHours: float = Field(..., ge=0, le=24, description="Daily play time in hours")
+    InGamePurchases: int = Field(..., ge=0, le=1, description="0 = No, 1 = Yes")
+    GameDifficulty: str = Field(..., description="Easy / Medium / Hard")
+    SessionsPerWeek: int = Field(..., ge=0, le=20, description="Sessions per week")
+    AvgSessionDurationMinutes: int = Field(..., ge=10, le=180, description="Avg session duration (min)")
+    PlayerLevel: int = Field(..., ge=1, le=100, description="Current player level")
+    AchievementsUnlocked: int = Field(..., ge=0, le=50, description="Achievements unlocked")
+
+    model_config = {"json_schema_extra": {"examples": [{
+        "Age": 25, "Gender": "Male", "Location": "USA",
+        "GameGenre": "Action", "PlayTimeHours": 10.5,
+        "InGamePurchases": 1, "GameDifficulty": "Medium",
+        "SessionsPerWeek": 5, "AvgSessionDurationMinutes": 90,
+        "PlayerLevel": 30, "AchievementsUnlocked": 15,
+    }]}}
+
+
+class PredictionResponse(BaseModel):
+    churn_probability: float
+    will_churn: bool
+    risk_level: str
+    recommendations: list[str]
+
+
+# ---------------------------------------------------------------------------
+# Recommendation engine
+# ---------------------------------------------------------------------------
+def get_recommendations(risk_level: str, data: dict) -> list[str]:
+    """Return actionable recommendations based on risk level & player data."""
+    recs: list[str] = []
+
+    if risk_level == "HIGH":
+        recs.append("🚨 Send a personalised retention offer immediately")
+        recs.append("🎁 Offer exclusive in-game rewards or limited-time items")
+        recs.append("📞 Assign to priority support for proactive outreach")
+        if data.get("SessionsPerWeek", 0) <= 2:
+            recs.append("📅 Send re-engagement push notifications")
+        if data.get("InGamePurchases", 0) == 0:
+            recs.append("💰 Offer a first-purchase discount or starter pack")
+
+    elif risk_level == "MEDIUM":
+        recs.append("📊 Monitor engagement trends over the next 7 days")
+        recs.append("🏆 Introduce achievement-based challenges to boost activity")
+        recs.append("👥 Suggest social features like guilds or team events")
+        if data.get("PlayerLevel", 0) < 20:
+            recs.append("🎯 Provide a guided progression quest to level 20")
+
+    else:  # LOW
+        recs.append("✅ Player is healthy — maintain current experience")
+        recs.append("⭐ Recognise loyalty with a milestone reward")
+        recs.append("🗣️ Invite to beta-test new content or features")
+
+    return recs
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "ok",
+        "model_loaded": model is not None,
+        "message": "Player Churn Prediction API is running",
+    }
+
+
+@app.get("/model/info")
+def model_info():
+    """Return model metadata."""
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    return {
+        "model_type": type(model).__name__,
+        "n_features": len(feature_names),
+        "features": feature_names,
+        "categorical_mappings": {
+            col: list(le.classes_) for col, le in label_encoders.items()
+        },
+    }
+
+
+@app.post("/predict", response_model=PredictionResponse)
+def predict(player: PlayerInput):
+    """Predict churn risk for a single player."""
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded — run training first")
+
+    try:
+        data = player.model_dump()
+        df = pd.DataFrame([data])
+
+        # Encode categorical columns
+        categorical_cols = ["Gender", "Location", "GameGenre", "GameDifficulty"]
+        for col in categorical_cols:
+            df[col] = label_encoders[col].transform(df[col])
+
+        # Apply feature engineering (adds EngagementScore, ProgressionRate, etc.)
+        df = run_feature_engineering(df)
+
+        # Select features in training order & scale
+        df = df[feature_names]
+        df_scaled = pd.DataFrame(scaler.transform(df), columns=feature_names)
+
+        # Predict
+        prediction = int(model.predict(df_scaled)[0])
+        probability = float(model.predict_proba(df_scaled)[0][1])
+
+        # Risk level
+        if probability >= 0.7:
+            risk_level = "HIGH"
+        elif probability >= 0.4:
+            risk_level = "MEDIUM"
+        else:
+            risk_level = "LOW"
+
+        recommendations = get_recommendations(risk_level, data)
+
+        return PredictionResponse(
+            churn_probability=round(probability, 4),
+            will_churn=bool(prediction),
+            risk_level=risk_level,
+            recommendations=recommendations,
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Run with: uvicorn backend.main:app --reload --port 8000
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
