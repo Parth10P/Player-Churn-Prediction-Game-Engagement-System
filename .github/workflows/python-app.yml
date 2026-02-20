@@ -1,42 +1,207 @@
-# This workflow will install Python dependencies, run tests, lint, and execute the exploration notebook
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  ChurnGuard CI/CD Pipeline
+#  Runs on every push to main & every PR targeting main
+#  All jobs must pass before code can be merged
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-name: Python application
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
+# ─────────────────────────────────────────────
+#  JOB 1 — Lint & Code Quality (Python)
+# ─────────────────────────────────────────────
 jobs:
-  build:
-
+  lint-python:
+    name: 🔍 Lint Python
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.12"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest jupyter
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Execute exploration notebook
-      run: |
-        jupyter nbconvert --to notebook --execute notebooks/exploration.ipynb --output executed_exploration.ipynb
-    - name: Test with pytest
-      run: |
-        pytest || echo "No tests found, skipping"
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install linters
+        run: pip install flake8
+
+      - name: Syntax & import errors (fatal)
+        run: flake8 backend/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Code style warnings (non-fatal)
+        run: flake8 backend/ tests/ --count --exit-zero --max-complexity=12 --max-line-length=127 --statistics
+
+  # ─────────────────────────────────────────────
+  #  JOB 2 — Train Model
+  # ─────────────────────────────────────────────
+  train-model:
+    name: 🧠 Train Model
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Train ML model
+        run: python -m backend.ml.train
+
+      - name: Verify model artifacts exist
+        run: |
+          test -f backend/models/churn_model.pkl    || (echo "❌ churn_model.pkl missing" && exit 1)
+          test -f backend/models/scaler.pkl         || (echo "❌ scaler.pkl missing" && exit 1)
+          test -f backend/models/label_encoders.pkl || (echo "❌ label_encoders.pkl missing" && exit 1)
+          test -f backend/models/feature_names.pkl  || (echo "❌ feature_names.pkl missing" && exit 1)
+          echo "✅ All 4 model artifacts created"
+
+      - name: Upload model artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artifacts
+          path: backend/models/
+          retention-days: 1
+
+  # ─────────────────────────────────────────────
+  #  JOB 3 — Backend Tests (needs trained model)
+  # ─────────────────────────────────────────────
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    needs: train-model
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt pytest httpx
+
+      - name: Download model artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: model-artifacts
+          path: backend/models/
+
+      - name: Run tests
+        run: python -m pytest tests/ -v --tb=short
+
+      - name: Verify all tests passed
+        run: echo "✅ All backend tests passed"
+
+  # ─────────────────────────────────────────────
+  #  JOB 4 — Frontend Lint & Build
+  # ─────────────────────────────────────────────
+  build-frontend:
+    name: 🏗️ Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Build production bundle
+        run: npx next build
+
+      - name: Verify build output
+        run: |
+          test -d .next || (echo "❌ .next build directory missing" && exit 1)
+          echo "✅ Frontend build successful"
+
+  # ─────────────────────────────────────────────
+  #  JOB 5 — Notebook Execution
+  # ─────────────────────────────────────────────
+  test-notebook:
+    name: 📓 Notebook Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt jupyter nbconvert matplotlib seaborn
+
+      - name: Execute notebook
+        run: jupyter nbconvert --to notebook --execute notebooks/exploration.ipynb --ExecutePreprocessor.timeout=120 --output executed_exploration.ipynb
+
+      - name: Verify notebook executed
+        run: echo "✅ Notebook executed without errors"
+
+  # ─────────────────────────────────────────────
+  #  JOB 6 — Final Gate (all checks must pass)
+  # ─────────────────────────────────────────────
+  ci-passed:
+    name: ✅ All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [lint-python, test-backend, build-frontend, test-notebook]
+    if: always()
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [ "${{ needs.lint-python.result }}" != "success" ]; then
+            echo "❌ Python linting failed"
+            exit 1
+          fi
+          if [ "${{ needs.test-backend.result }}" != "success" ]; then
+            echo "❌ Backend tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.build-frontend.result }}" != "success" ]; then
+            echo "❌ Frontend build failed"
+            exit 1
+          fi
+          if [ "${{ needs.test-notebook.result }}" != "success" ]; then
+            echo "❌ Notebook execution failed"
+            exit 1
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ All CI checks passed!"
+          echo "   Safe to merge into main"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
