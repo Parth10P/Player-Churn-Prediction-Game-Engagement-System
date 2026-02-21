@@ -123,7 +123,11 @@ npm run dev
 ```
 
 The app will be live at **http://localhost:3000**
-
+##### or
+### Start directly
+```bash
+  ./setup.sh
+```
 ---
 
 ## 🔌 API Endpoints
