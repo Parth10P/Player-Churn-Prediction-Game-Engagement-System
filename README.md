@@ -207,13 +207,3 @@ curl -X POST http://localhost:8000/predict \
 | **Icons** | Lucide React |
 
 ---
-
-## 📝 License
-
-This project is for educational / academic purposes.
-
----
-
-<p align="center">
-  Built with ❤️ by <strong>Parth Patel</strong>
-</p>
