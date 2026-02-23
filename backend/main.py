@@ -202,6 +202,67 @@ def predict(player: PlayerInput):
 
 
 # ---------------------------------------------------------------------------
+# Model comparison & feature importance helpers
+# ---------------------------------------------------------------------------
+RESULTS_DIR = os.path.join(BASE_DIR, "models")
+
+
+def _parse_results_file(path: str) -> dict:
+    """Parse a results.txt file into a {metric: value} dict."""
+    metrics = {}
+    if not os.path.exists(path):
+        return metrics
+    with open(path) as f:
+        for line in f:
+            if ":" in line and any(
+                k in line for k in ("Accuracy", "Precision", "Recall", "F1", "ROC")
+            ):
+                key, val = line.strip().split(":")
+                metrics[key.strip()] = round(float(val.strip()), 4)
+    return metrics
+
+
+@app.get("/model/compare")
+def model_compare():
+    """Compare Logistic Regression and Random Forest metrics side-by-side."""
+    logistic_path = os.path.join(RESULTS_DIR, "logistic_results.txt")
+    rf_path = os.path.join(RESULTS_DIR, "rf_results.txt")
+
+    logistic_metrics = _parse_results_file(logistic_path)
+    rf_metrics = _parse_results_file(rf_path)
+
+    if not logistic_metrics and not rf_metrics:
+        raise HTTPException(status_code=404, detail="No results files found")
+
+    return {
+        "logistic_regression": logistic_metrics,
+        "random_forest": rf_metrics,
+    }
+
+
+@app.get("/model/feature-importance")
+def feature_importance():
+    """Return Random Forest feature importances sorted by importance."""
+    rf_model_path = os.path.join(RESULTS_DIR, "rf_model.pkl")
+    if not os.path.exists(rf_model_path):
+        raise HTTPException(status_code=404, detail="RF model not found — run training first")
+
+    rf_model = joblib.load(rf_model_path)
+    names = feature_names
+    if names is None:
+        raise HTTPException(status_code=503, detail="Feature names not loaded")
+
+    importances = rf_model.feature_importances_
+    # Sort descending
+    indices = np.argsort(importances)[::-1]
+    result = [
+        {"feature": names[i], "importance": round(float(importances[i]), 4)}
+        for i in indices
+    ]
+    return {"feature_importance": result}
+
+
+# ---------------------------------------------------------------------------
 # Run with: uvicorn backend.main:app --reload --port 8000
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":

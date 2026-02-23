@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { PlayerInput, PredictionResponse, HealthResponse, ModelInfoResponse } from "./types";
+import type { PlayerInput, PredictionResponse, HealthResponse, ModelInfoResponse, ModelCompareResponse, FeatureImportanceResponse } from "./types";
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -22,5 +22,17 @@ export async function checkHealth(): Promise<HealthResponse> {
 /** Get model metadata */
 export async function getModelInfo(): Promise<ModelInfoResponse> {
   const res = await API.get<ModelInfoResponse>("/model/info");
+  return res.data;
+}
+
+/** Compare Logistic Regression vs Random Forest metrics */
+export async function getModelComparison(): Promise<ModelCompareResponse> {
+  const res = await API.get<ModelCompareResponse>("/model/compare");
+  return res.data;
+}
+
+/** Get Random Forest feature importances */
+export async function getFeatureImportance(): Promise<FeatureImportanceResponse> {
+  const res = await API.get<FeatureImportanceResponse>("/model/feature-importance");
   return res.data;
 }
