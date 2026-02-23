@@ -1,4 +1,4 @@
-# 🎮 ChurnGuard — Player Churn Prediction & Game Engagement System
+# ChurnGuard — Player Churn Prediction & Game Engagement System
 
 An end-to-end **Machine Learning** system that predicts player churn risk in online games and delivers personalised engagement strategies.
 
@@ -6,20 +6,20 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---------|-------------|
-| 🤖 **ML Prediction** | Random Forest model with **95% accuracy** and **0.94 ROC AUC** |
-| 📊 **Visual Dashboard** | Interactive gauge chart, risk badges, and animated UI |
-| 💡 **Smart Recommendations** | Actionable retention strategies based on risk level |
-| ⚡ **Real-time API** | FastAPI backend with < 50 ms prediction latency |
-| 🎨 **Modern UI** | Dark gaming theme with Tailwind CSS & Framer Motion |
-| 📱 **Responsive** | Fully responsive across desktop, tablet, and mobile |
+| **ML Prediction** | Random Forest model with **95% accuracy** and **0.94 ROC AUC** |
+| **Visual Dashboard** | Interactive gauge chart, risk badges, and animated UI |
+| **Smart Recommendations** | Actionable retention strategies based on risk level |
+| **Real-time API** | FastAPI backend with < 50 ms prediction latency |
+| **Modern UI** | Dark gaming theme with Tailwind CSS & Framer Motion |
+| **Responsive** | Fully responsive across desktop, tablet, and mobile |
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌──────────────┐       POST /predict       ┌──────────────────┐
@@ -38,7 +38,7 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 ├── backend/
@@ -78,7 +78,7 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -130,7 +130,7 @@ The app will be live at **http://localhost:3000**
 ```
 ---
 
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -166,16 +166,16 @@ curl -X POST http://localhost:8000/predict \
   "will_churn": false,
   "risk_level": "LOW",
   "recommendations": [
-    "✅ Player is healthy — maintain current experience",
-    "⭐ Recognise loyalty with a milestone reward",
-    "🗣️ Invite to beta-test new content or features"
+    "Player is healthy — maintain current experience",
+    "Recognise loyalty with a milestone reward",
+    "Invite to beta-test new content or features"
   ]
 }
 ```
 
 ---
 
-## 🧠 Model Details
+## Model Details
 
 | Property | Value |
 |----------|-------|
@@ -198,7 +198,7 @@ curl -X POST http://localhost:8000/predict \
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
