@@ -8,31 +8,6 @@ interface Props {
 export default function GaugeChart({ probability, riskLevel }: Props) {
   const pct = Math.round(probability * 100);
 
-  // SVG arc parameters
-  const cx = 100;
-  const cy = 100;
-  const r = 80;
-  const startAngle = Math.PI; // 180°
-  const endAngle = 0; // 0°
-  const totalArc = Math.PI; // semicircle
-
-  const filledAngle = startAngle - totalArc * probability;
-
-  // Convert angle → SVG point
-  const point = (angle: number) => ({
-    x: cx + r * Math.cos(angle),
-    y: cy - r * Math.sin(angle),
-  });
-
-  const bgStart = point(startAngle);
-  const bgEnd = point(endAngle);
-  const fillEnd = point(filledAngle);
-
-  const largeArc = probability > 0.5 ? 1 : 0;
-
-  const bgPath = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 1 1 ${bgEnd.x} ${bgEnd.y}`;
-  const fillPath = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`;
-
   const riskColor =
     riskLevel === "HIGH"
       ? "#ef4444"
@@ -40,15 +15,38 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
         ? "#f59e0b"
         : "#22c55e";
 
+  // Gauge geometry
+  const strokeW = 14;
+  const r = 70;
+  const padding = strokeW + 12; // extra room for stroke + drop-shadow
+  const cx = r + padding;
+  const cy = r + padding;
+  const svgWidth = (r + padding) * 2;
+  const svgHeight = r + padding + 30; // semicircle top half + room for text below center
+
+  // Semicircle: from left (180°) to right (0°)
+  const bgPath = `M ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy}`;
+
+  // Filled arc
+  const angle = Math.PI * (1 - probability);
+  const endX = cx + r * Math.cos(angle);
+  const endY = cy - r * Math.sin(angle);
+  const largeArc = probability > 0.5 ? 1 : 0;
+  const fillPath = `M ${cx - r} ${cy} A ${r} ${r} 0 ${largeArc} 1 ${endX} ${endY}`;
+
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 120" className="w-48 sm:w-56">
+      <svg
+        width="100%"
+        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+        className="w-48 sm:w-56"
+      >
         {/* Background arc */}
         <path
           d={bgPath}
           fill="none"
           stroke="#2a2a4a"
-          strokeWidth="14"
+          strokeWidth={strokeW}
           strokeLinecap="round"
         />
         {/* Filled arc */}
@@ -56,27 +54,30 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
           d={fillPath}
           fill="none"
           stroke={riskColor}
-          strokeWidth="14"
+          strokeWidth={strokeW}
           strokeLinecap="round"
           className="transition-all duration-700 ease-out"
           style={{
-            filter: `drop-shadow(0 0 10px ${riskColor}55)`,
+            filter: `drop-shadow(0 0 8px ${riskColor}66)`,
           }}
         />
-        {/* Center text */}
+        {/* Percentage text */}
         <text
           x={cx}
           y={cy - 12}
           textAnchor="middle"
+          dominantBaseline="middle"
           className="fill-current text-[var(--foreground)]"
           style={{ fontSize: "30px", fontWeight: 800 }}
         >
           {pct}%
         </text>
+        {/* Label */}
         <text
           x={cx}
-          y={cy + 8}
+          y={cy + 10}
           textAnchor="middle"
+          dominantBaseline="middle"
           style={{ fontSize: "11px", fill: "#8888aa", letterSpacing: "0.05em" }}
         >
           Churn Risk
