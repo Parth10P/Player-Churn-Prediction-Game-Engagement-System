@@ -34,6 +34,20 @@ export interface ModelInfoResponse {
   categorical_mappings: Record<string, string[]>;
 }
 
+export interface ModelCompareResponse {
+  logistic_regression: Record<string, number>;
+  random_forest: Record<string, number>;
+}
+
+export interface FeatureImportanceItem {
+  feature: string;
+  importance: number;
+}
+
+export interface FeatureImportanceResponse {
+  feature_importance: FeatureImportanceItem[];
+}
+
 /* ─── Form option helpers ─── */
 
 export const GENDER_OPTIONS = ["Male", "Female"] as const;
