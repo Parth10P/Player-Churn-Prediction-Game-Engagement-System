@@ -12,7 +12,7 @@ import {
   DIFFICULTY_OPTIONS,
 } from "@/lib/types";
 import { toast } from "sonner";
-import { Loader2, Send, RotateCcw } from "lucide-react";
+import { Loader2, RotateCcw } from "lucide-react";
 
 interface Props {
   onResult: (r: PredictionResponse) => void;
@@ -271,7 +271,6 @@ export default function PredictionForm({
             </>
           ) : (
             <>
-              <Send className="h-5 w-5" />
               Predict Churn
             </>
           )}
