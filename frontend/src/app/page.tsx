@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import PredictionForm from "@/components/PredictionForm";
 import ResultsDisplay from "@/components/ResultsDisplay";
+import ModelComparison from "@/components/ModelComparison";
 import type { PredictionResponse } from "@/lib/types";
 import { Sparkles } from "lucide-react";
 
@@ -56,6 +57,10 @@ export default function PredictPage() {
           <ResultsDisplay result={result} loading={loading} />
         </motion.div>
       </div>
+
+      {/* Model Comparison & Feature Importance */}
+      <ModelComparison />
     </div>
   );
 }
+
