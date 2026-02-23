@@ -1,0 +1,5 @@
+Decision Tree Results:
+    Accuracy: 0.9265642562757587,
+    Precision: 0.8749377179870453,
+    Recall: 0.8389870998566651,
+    F1 Score: 0.8565853658536585
