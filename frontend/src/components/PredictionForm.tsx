@@ -20,7 +20,11 @@ interface Props {
   setLoading: (v: boolean) => void;
 }
 
-export default function PredictionForm({ onResult, loading, setLoading }: Props) {
+export default function PredictionForm({
+  onResult,
+  loading,
+  setLoading,
+}: Props) {
   const [form, setForm] = useState<PlayerInput>({ ...DEFAULT_PLAYER });
 
   const set = <K extends keyof PlayerInput>(key: K, value: PlayerInput[K]) =>
@@ -48,11 +52,11 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card space-y-5">
+    <form onSubmit={handleSubmit} className="glass-card space-y-6">
       <h2 className="text-xl font-semibold">Player Details</h2>
 
       {/* ── Row: Age + Gender ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="label-text">Age</label>
           <input
@@ -82,7 +86,7 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
       </div>
 
       {/* ── Row: Location + Game Genre ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="label-text">Location</label>
           <select
@@ -114,22 +118,24 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
       </div>
 
       {/* ── Row: Play Time + Difficulty ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="label-text">
             Play Time (hrs/day):{" "}
-            <span className="text-brand-400">{form.PlayTimeHours}</span>
+            <span className="text-brand-400 font-semibold">
+              {form.PlayTimeHours}
+            </span>
           </label>
           <input
             type="range"
-            className="w-full accent-brand-500"
+            className="slider-field mt-1"
             min={0}
             max={24}
             step={0.5}
             value={form.PlayTimeHours}
             onChange={(e) => set("PlayTimeHours", Number(e.target.value))}
           />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>0h</span>
             <span>24h</span>
           </div>
@@ -153,7 +159,7 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
       {/* ── In-Game Purchases ── */}
       <div>
         <label className="label-text">In-Game Purchases</label>
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {[
             { label: "No", val: 0 },
             { label: "Yes", val: 1 },
@@ -162,10 +168,10 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
               key={val}
               type="button"
               onClick={() => set("InGamePurchases", val)}
-              className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
                 form.InGamePurchases === val
-                  ? "border-brand-500 bg-brand-600/20 text-brand-300"
-                  : "border-[var(--border)] text-gray-400 hover:border-gray-500"
+                  ? "border-brand-500 bg-brand-600/20 text-brand-300 shadow-sm shadow-brand-500/10"
+                  : "border-[var(--border)] text-gray-400 hover:border-gray-500 hover:text-gray-300"
               }`}
             >
               {label}
@@ -175,21 +181,23 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
       </div>
 
       {/* ── Row: Sessions/Week + Avg Duration ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="label-text">
             Sessions / Week:{" "}
-            <span className="text-brand-400">{form.SessionsPerWeek}</span>
+            <span className="text-brand-400 font-semibold">
+              {form.SessionsPerWeek}
+            </span>
           </label>
           <input
             type="range"
-            className="w-full accent-brand-500"
+            className="slider-field mt-1"
             min={0}
             max={20}
             value={form.SessionsPerWeek}
             onChange={(e) => set("SessionsPerWeek", Number(e.target.value))}
           />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>0</span>
             <span>20</span>
           </div>
@@ -197,13 +205,13 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
         <div>
           <label className="label-text">
             Avg Session Duration (min):{" "}
-            <span className="text-brand-400">
+            <span className="text-brand-400 font-semibold">
               {form.AvgSessionDurationMinutes}
             </span>
           </label>
           <input
             type="range"
-            className="w-full accent-brand-500"
+            className="slider-field mt-1"
             min={10}
             max={180}
             step={5}
@@ -212,7 +220,7 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
               set("AvgSessionDurationMinutes", Number(e.target.value))
             }
           />
-          <div className="flex justify-between text-xs text-gray-500">
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>10m</span>
             <span>180m</span>
           </div>
@@ -220,7 +228,7 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
       </div>
 
       {/* ── Row: Player Level + Achievements ── */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label className="label-text">Player Level</label>
           <input
@@ -251,7 +259,11 @@ export default function PredictionForm({ onResult, loading, setLoading }: Props)
 
       {/* ── Buttons ── */}
       <div className="flex gap-3 pt-2">
-        <button type="submit" className="btn-primary flex-1 flex items-center justify-center gap-2" disabled={loading}>
+        <button
+          type="submit"
+          className="btn-primary flex flex-1 items-center justify-center gap-2"
+          disabled={loading}
+        >
           {loading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />

@@ -19,21 +19,26 @@ interface Props {
 export default function ResultsDisplay({ result, loading }: Props) {
   if (loading) {
     return (
-      <div className="glass-card flex min-h-[400px] flex-col items-center justify-center gap-4 text-gray-400">
+      <div className="glass-card flex min-h-[520px] flex-col items-center justify-center gap-4 text-gray-400">
         <Loader2 className="h-10 w-10 animate-spin text-brand-400" />
-        <p>Analysing player data…</p>
+        <p className="text-sm">Analysing player data…</p>
       </div>
     );
   }
 
   if (!result) {
     return (
-      <div className="glass-card flex min-h-[400px] flex-col items-center justify-center gap-3 text-gray-500">
-        <ShieldAlert className="h-12 w-12 text-gray-600" />
-        <p className="text-lg font-medium">No prediction yet</p>
-        <p className="text-sm">
-          Fill in the form and click <strong>Predict Churn</strong>.
-        </p>
+      <div className="glass-card flex min-h-[520px] flex-col items-center justify-center gap-4 text-gray-500">
+        <ShieldAlert className="h-14 w-14 text-gray-600" />
+        <div className="text-center">
+          <p className="text-lg font-semibold text-gray-400">
+            No prediction yet
+          </p>
+          <p className="mt-1 text-sm">
+            Fill in the form and click{" "}
+            <strong className="text-brand-300">Predict Churn</strong>.
+          </p>
+        </div>
       </div>
     );
   }
@@ -70,7 +75,7 @@ export default function ResultsDisplay({ result, loading }: Props) {
       transition={{ duration: 0.4 }}
       className={`glass-card space-y-6 ${riskConfig.border}`}
     >
-      {/* Title */}
+      {/* Title + Badge */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Prediction Results</h2>
         <span className={riskConfig.badge}>
@@ -80,21 +85,25 @@ export default function ResultsDisplay({ result, loading }: Props) {
       </div>
 
       {/* Gauge */}
-      <GaugeChart probability={churn_probability} riskLevel={risk_level} />
+      <div className="flex justify-center py-2">
+        <GaugeChart probability={churn_probability} riskLevel={risk_level} />
+      </div>
 
-      {/* Status */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 text-center">
-        <p className="text-sm text-gray-400">Prediction</p>
-        <p className="mt-1 text-lg font-semibold">
+      {/* Status card */}
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--background)]/60 p-5 text-center">
+        <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+          Prediction
+        </p>
+        <p className="mt-2 text-lg font-semibold">
           {will_churn ? (
             <span className="text-risk-high">⚠ Player Likely to Churn</span>
           ) : (
             <span className="text-risk-low">✅ Player Likely to Stay</span>
           )}
         </p>
-        <p className="mt-1 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-gray-400">
           Churn Probability:{" "}
-          <span className="font-mono font-semibold text-white">
+          <span className="font-mono font-bold text-white">
             {(churn_probability * 100).toFixed(1)}%
           </span>
         </p>
@@ -113,7 +122,7 @@ export default function ResultsDisplay({ result, loading }: Props) {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 * i }}
-              className="rounded-lg border border-[var(--border)] bg-[var(--background)] px-4 py-2.5 text-sm text-gray-300"
+              className="rounded-xl border border-[var(--border)] bg-[var(--background)]/60 px-4 py-3 text-sm text-gray-300"
             >
               {rec}
             </motion.li>

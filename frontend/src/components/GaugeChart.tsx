@@ -1,7 +1,7 @@
 "use client";
 
 interface Props {
-  probability: number;          // 0 – 1
+  probability: number; // 0 – 1
   riskLevel: "HIGH" | "MEDIUM" | "LOW";
 }
 
@@ -12,9 +12,9 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
   const cx = 100;
   const cy = 100;
   const r = 80;
-  const startAngle = Math.PI;      // 180°
-  const endAngle = 0;               // 0°
-  const totalArc = Math.PI;         // semicircle
+  const startAngle = Math.PI; // 180°
+  const endAngle = 0; // 0°
+  const totalArc = Math.PI; // semicircle
 
   const filledAngle = startAngle - totalArc * probability;
 
@@ -37,12 +37,12 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
     riskLevel === "HIGH"
       ? "#ef4444"
       : riskLevel === "MEDIUM"
-      ? "#f59e0b"
-      : "#22c55e";
+        ? "#f59e0b"
+        : "#22c55e";
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 120" className="w-full max-w-[240px]">
+      <svg viewBox="0 0 200 120" className="w-48 sm:w-56">
         {/* Background arc */}
         <path
           d={bgPath}
@@ -60,24 +60,24 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
           strokeLinecap="round"
           className="transition-all duration-700 ease-out"
           style={{
-            filter: `drop-shadow(0 0 8px ${riskColor}66)`,
+            filter: `drop-shadow(0 0 10px ${riskColor}55)`,
           }}
         />
         {/* Center text */}
         <text
           x={cx}
-          y={cy - 10}
+          y={cy - 12}
           textAnchor="middle"
           className="fill-current text-[var(--foreground)]"
-          style={{ fontSize: "28px", fontWeight: 700 }}
+          style={{ fontSize: "30px", fontWeight: 800 }}
         >
           {pct}%
         </text>
         <text
           x={cx}
-          y={cy + 10}
+          y={cy + 8}
           textAnchor="middle"
-          style={{ fontSize: "11px", fill: "#8888aa" }}
+          style={{ fontSize: "11px", fill: "#8888aa", letterSpacing: "0.05em" }}
         >
           Churn Risk
         </text>

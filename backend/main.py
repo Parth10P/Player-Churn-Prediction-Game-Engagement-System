@@ -103,25 +103,25 @@ def get_recommendations(risk_level: str, data: dict) -> list[str]:
     recs: list[str] = []
 
     if risk_level == "HIGH":
-        recs.append("🚨 Send a personalised retention offer immediately")
-        recs.append("🎁 Offer exclusive in-game rewards or limited-time items")
-        recs.append("📞 Assign to priority support for proactive outreach")
+        recs.append("Send a personalised retention offer immediately")
+        recs.append("Offer exclusive in-game rewards or limited-time items")
+        recs.append("Assign to priority support for proactive outreach")
         if data.get("SessionsPerWeek", 0) <= 2:
-            recs.append("📅 Send re-engagement push notifications")
+            recs.append("Send re-engagement push notifications")
         if data.get("InGamePurchases", 0) == 0:
-            recs.append("💰 Offer a first-purchase discount or starter pack")
+            recs.append("Offer a first-purchase discount or starter pack")
 
     elif risk_level == "MEDIUM":
-        recs.append("📊 Monitor engagement trends over the next 7 days")
-        recs.append("🏆 Introduce achievement-based challenges to boost activity")
-        recs.append("👥 Suggest social features like guilds or team events")
+        recs.append("Monitor engagement trends over the next 7 days")
+        recs.append("Introduce achievement-based challenges to boost activity")
+        recs.append("Suggest social features like guilds or team events")
         if data.get("PlayerLevel", 0) < 20:
-            recs.append("🎯 Provide a guided progression quest to level 20")
+            recs.append("Provide a guided progression quest to level 20")
 
     else:  # LOW
-        recs.append("✅ Player is healthy — maintain current experience")
-        recs.append("⭐ Recognise loyalty with a milestone reward")
-        recs.append("🗣️ Invite to beta-test new content or features")
+        recs.append("Player is healthy — maintain current experience")
+        recs.append("Recognise loyalty with a milestone reward")
+        recs.append("Invite to beta-test new content or features")
 
     return recs
 
