@@ -11,6 +11,7 @@ import numpy as np
 import joblib
 import os
 import sys
+import math
 
 # ---------------------------------------------------------------------------
 # Path setup — so we can import the existing ML modules
@@ -179,6 +180,11 @@ def predict(player: PlayerInput):
         # Predict
         prediction = int(model.predict(df_scaled)[0])
         probability = float(model.predict_proba(df_scaled)[0][1])
+
+        # Temperature scaling for smoother visual probabilities (Gauge Chart)
+        p = max(0.001, min(0.999, probability))
+        scaled_logit = math.log(p / (1 - p)) / 2.5
+        probability = 1 / (1 + math.exp(-scaled_logit))
 
         # Risk level
         if probability >= 0.7:
