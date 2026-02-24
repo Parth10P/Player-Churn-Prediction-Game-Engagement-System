@@ -8,31 +8,6 @@ interface Props {
 export default function GaugeChart({ probability, riskLevel }: Props) {
   const pct = Math.round(probability * 100);
 
-  // SVG arc parameters
-  const cx = 100;
-  const cy = 100;
-  const r = 80;
-  const startAngle = Math.PI; // 180°
-  const endAngle = 0; // 0°
-  const totalArc = Math.PI; // semicircle
-
-  const filledAngle = startAngle - totalArc * probability;
-
-  // Convert angle → SVG point
-  const point = (angle: number) => ({
-    x: cx + r * Math.cos(angle),
-    y: cy - r * Math.sin(angle),
-  });
-
-  const bgStart = point(startAngle);
-  const bgEnd = point(endAngle);
-  const fillEnd = point(filledAngle);
-
-  const largeArc = probability > 0.5 ? 1 : 0;
-
-  const bgPath = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 1 1 ${bgEnd.x} ${bgEnd.y}`;
-  const fillPath = `M ${bgStart.x} ${bgStart.y} A ${r} ${r} 0 ${largeArc} 1 ${fillEnd.x} ${fillEnd.y}`;
-
   const riskColor =
     riskLevel === "HIGH"
       ? "#ef4444"
@@ -40,48 +15,91 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
         ? "#f59e0b"
         : "#22c55e";
 
+  const fillDeg = probability * 180;
+  const size = 200;
+  const stroke = 16;
+  const innerSize = size - stroke * 2;
+
   return (
-    <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 120" className="w-48 sm:w-56">
-        {/* Background arc */}
-        <path
-          d={bgPath}
-          fill="none"
-          stroke="#2a2a4a"
-          strokeWidth="14"
-          strokeLinecap="round"
-        />
-        {/* Filled arc */}
-        <path
-          d={fillPath}
-          fill="none"
-          stroke={riskColor}
-          strokeWidth="14"
-          strokeLinecap="round"
-          className="transition-all duration-700 ease-out"
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: size,
+        margin: "0 auto",
+      }}
+    >
+      {/* Gauge wrapper — clips to semicircle */}
+      <div
+        style={{
+          width: size,
+          height: size / 2,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* Full circle with conic-gradient, only top half visible */}
+        <div
           style={{
-            filter: `drop-shadow(0 0 10px ${riskColor}55)`,
+            width: size,
+            height: size,
+            borderRadius: "50%",
+            background: `conic-gradient(
+              from 270deg,
+              ${riskColor} 0deg ${fillDeg}deg,
+              #2a2a4a ${fillDeg}deg 180deg,
+              transparent 180deg 360deg
+            )`,
           }}
         />
-        {/* Center text */}
-        <text
-          x={cx}
-          y={cy - 12}
-          textAnchor="middle"
-          className="fill-current text-[var(--foreground)]"
-          style={{ fontSize: "30px", fontWeight: 800 }}
+        {/* Inner circle cutout → donut shape */}
+        <div
+          style={{
+            position: "absolute",
+            top: stroke,
+            left: stroke,
+            width: innerSize,
+            height: innerSize,
+            borderRadius: "50%",
+            background: "var(--card, #1a1a2e)",
+          }}
+        />
+      </div>
+
+      {/* Text positioned inside the gauge arc */}
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: -(size / 2 - stroke - 8),
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 36,
+            fontWeight: 800,
+            color: "var(--foreground, #f0f0ff)",
+            display: "block",
+            lineHeight: 1,
+            filter: `drop-shadow(0 0 12px ${riskColor}44)`,
+          }}
         >
           {pct}%
-        </text>
-        <text
-          x={cx}
-          y={cy + 8}
-          textAnchor="middle"
-          style={{ fontSize: "11px", fill: "#8888aa", letterSpacing: "0.05em" }}
+        </span>
+        <span
+          style={{
+            fontSize: 11,
+            color: "#8888aa",
+            letterSpacing: "0.06em",
+            display: "block",
+            marginTop: 4,
+          }}
         >
           Churn Risk
-        </text>
-      </svg>
+        </span>
+      </div>
     </div>
   );
 }
