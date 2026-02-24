@@ -46,7 +46,7 @@ export default function GaugeChart({ probability, riskLevel }: Props) {
             height: size,
             borderRadius: "50%",
             background: `conic-gradient(
-              from 180deg,
+              from 270deg,
               ${riskColor} 0deg ${fillDeg}deg,
               #2a2a4a ${fillDeg}deg 180deg,
               transparent 180deg 360deg
