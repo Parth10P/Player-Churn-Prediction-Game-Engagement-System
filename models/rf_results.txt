@@ -1,7 +1,7 @@
 Random Forest Evaluation Metrics
 ================================
-Accuracy: 0.9528
-Precision: 0.9232
-Recall: 0.8910
-F1 Score: 0.9069
-ROC-AUC: 0.9406
+Accuracy: 0.9485
+Precision: 0.9106
+Recall: 0.8877
+F1 Score: 0.8990
+ROC-AUC: 0.9396
