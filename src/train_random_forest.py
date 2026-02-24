@@ -32,7 +32,7 @@ def main():
     os.makedirs(PLOTS_DIR, exist_ok=True)
 
     # ── Train ──────────────────────────────────────────────────
-    model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+    model = RandomForestClassifier(n_estimators=100, max_depth=10, min_samples_leaf=20, random_state=42, n_jobs=-1)
     model.fit(X_train_scaled, y_train)
 
     # ── Evaluate ───────────────────────────────────────────────
@@ -80,7 +80,6 @@ def main():
     plt.close()
     print(f"Confusion matrix saved to {cm_path}")
 
-    # ── Feature importance ─────────────────────────────────────
     importances = model.feature_importances_
     indices = np.argsort(importances)[::-1]
 
