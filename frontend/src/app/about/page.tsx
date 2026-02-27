@@ -12,10 +12,9 @@ import {
 } from "lucide-react";
 
 const MODEL_STATS = [
-  { label: "Algorithm", value: "Random Forest" },
-  { label: "Estimators", value: "200" },
-  { label: "Accuracy", value: "95.0%" },
-  { label: "ROC AUC", value: "0.94" },
+  { label: "Algorithm", value: "Logistic Regression" },
+  { label: "Accuracy", value: "88.7%" },
+  { label: "ROC AUC", value: "0.93" },
   { label: "Dataset", value: "40,034 records" },
   { label: "Features", value: "16 (11 + 5)" },
 ];

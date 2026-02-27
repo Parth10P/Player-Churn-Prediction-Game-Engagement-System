@@ -10,7 +10,7 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
 
 | Feature | Description |
 |---------|-------------|
-| **ML Prediction** | Random Forest model with **95% accuracy** and **0.94 ROC AUC** |
+| **ML Prediction** | Logistic Regression model with **88.7% accuracy** and **0.93 ROC AUC** |
 | **Visual Dashboard** | Interactive gauge chart, risk badges, and animated UI |
 | **Smart Recommendations** | Actionable retention strategies based on risk level |
 | **Real-time API** | FastAPI backend with < 50 ms prediction latency |
@@ -31,9 +31,10 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
 └──────────────┘                           └──────────────────┘
                                                     │
                                            ┌────────┴────────┐
-                                           │  Random Forest  │
-                                           │  (16 features)  │
-                                           └─────────────────┘
+                                            │    Logistic     │
+                                            │   Regression    │
+                                            │  (16 features)  │
+                                            └─────────────────┘
 ```
 
 ---
@@ -179,10 +180,9 @@ curl -X POST http://localhost:8000/predict \
 
 | Property | Value |
 |----------|-------|
-| Algorithm | Random Forest Classifier |
-| Estimators | 200 |
-| Accuracy | 95.0% |
-| ROC AUC | 0.94 |
+| Algorithm | Logistic Regression |
+| Accuracy | 88.7% |
+| ROC AUC | 0.93 |
 | Dataset | 40,034 player records |
 | Features | 16 (11 original + 5 engineered) |
 

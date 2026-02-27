@@ -25,13 +25,13 @@ export async function getModelInfo(): Promise<ModelInfoResponse> {
   return res.data;
 }
 
-/** Compare Logistic Regression vs Random Forest metrics */
+/** Get Logistic Regression metrics */
 export async function getModelComparison(): Promise<ModelCompareResponse> {
   const res = await API.get<ModelCompareResponse>("/model/compare");
   return res.data;
 }
 
-/** Get Random Forest feature importances */
+/** Get Logistic Regression feature importances */
 export async function getFeatureImportance(): Promise<FeatureImportanceResponse> {
   const res = await API.get<FeatureImportanceResponse>("/model/feature-importance");
   return res.data;
