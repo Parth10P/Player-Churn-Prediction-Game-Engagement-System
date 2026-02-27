@@ -1,11 +1,6 @@
-"""
-Model training module for Player Churn Prediction.
-Trains a Random Forest classifier and saves the model.
-"""
-
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, accuracy_score, roc_auc_score
 import joblib
 import os
@@ -18,15 +13,12 @@ from backend.ml.feature_engineering import run_feature_engineering
 
 
 def train_model(X_train, y_train):
-    """Train a Random Forest classifier."""
-    model = RandomForestClassifier(
-        n_estimators=200,
-        max_depth=15,
-        min_samples_split=5,
-        min_samples_leaf=2,
+    """Train a Logistic Regression classifier for smoother probabilities."""
+    model = LogisticRegression(
         random_state=42,
-        n_jobs=-1,
         class_weight="balanced",
+        max_iter=1000,
+        C=0.1
     )
     model.fit(X_train, y_train)
     return model
@@ -73,7 +65,7 @@ def run_training_pipeline():
     X_train_scaled, X_test_scaled, _ = scale_features(X_train, X_test, fit=True)
 
     # Train
-    print("\nTraining Random Forest model...")
+    print("\nTraining Logistic Regression model...")
     model = train_model(X_train_scaled, y_train)
 
     # Evaluate
