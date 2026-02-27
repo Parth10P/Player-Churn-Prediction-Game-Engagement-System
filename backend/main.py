@@ -224,35 +224,32 @@ def _parse_results_file(path: str) -> dict:
 
 @app.get("/model/compare")
 def model_compare():
-    """Compare Logistic Regression and Random Forest metrics side-by-side."""
+    """Return Logistic Regression metrics."""
     logistic_path = os.path.join(RESULTS_DIR, "logistic_results.txt")
-    rf_path = os.path.join(RESULTS_DIR, "rf_results.txt")
-
     logistic_metrics = _parse_results_file(logistic_path)
-    rf_metrics = _parse_results_file(rf_path)
 
-    if not logistic_metrics and not rf_metrics:
+    if not logistic_metrics:
         raise HTTPException(status_code=404, detail="No results files found")
 
     return {
         "logistic_regression": logistic_metrics,
-        "random_forest": rf_metrics,
     }
 
 
 @app.get("/model/feature-importance")
 def feature_importance():
-    """Return Random Forest feature importances sorted by importance."""
-    rf_model_path = os.path.join(RESULTS_DIR, "rf_model.pkl")
-    if not os.path.exists(rf_model_path):
-        raise HTTPException(status_code=404, detail="RF model not found — run training first")
+    """Return Logistic Regression feature importances sorted by importance."""
+    model_path = os.path.join(RESULTS_DIR, "churn_model.pkl")
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=404, detail="Model not found — run training first")
 
-    rf_model = joblib.load(rf_model_path)
+    model = joblib.load(model_path)
     names = feature_names
     if names is None:
         raise HTTPException(status_code=503, detail="Feature names not loaded")
 
-    importances = rf_model.feature_importances_
+    # For Logistic Regression, use absolute values of coefficients as importance
+    importances = np.abs(model.coef_[0])
     # Sort descending
     indices = np.argsort(importances)[::-1]
     result = [
