@@ -2,6 +2,8 @@
 
 An end-to-end **Machine Learning** system that predicts player churn risk in online games and delivers personalised engagement strategies.
 
+**[Google Colab Notebook with End-to-End Pipeline & Visuals](https://colab.research.google.com/drive/1wLqkjDsmnHh4MHkAxNykjoNR0Qv2xg6K#scrollTo=whNd12qAoKCL)**
+
 Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn** (ML).
 
 ---
