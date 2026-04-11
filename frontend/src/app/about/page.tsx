@@ -16,7 +16,7 @@ const MODEL_STATS = [
   { label: "Accuracy", value: "88.7%" },
   { label: "ROC AUC", value: "0.93" },
   { label: "Dataset", value: "40,034 records" },
-  { label: "Features", value: "16 (11 + 5)" },
+  { label: "Features", value: "15 (11 + 4)" },
 ];
 
 const TECH_STACK = [
@@ -45,7 +45,6 @@ const TECH_STACK = [
 const ENGINEERED = [
   { name: "EngagementScore", formula: "SessionsPerWeek × AvgSessionDuration" },
   { name: "ProgressionRate", formula: "PlayerLevel / (PlayTimeHours + 1)" },
-  { name: "PurchaseFrequency", formula: "InGamePurchases (binary)" },
   { name: "IsInactive", formula: "1 if SessionsPerWeek ≤ 2" },
   { name: "SessionConsistency", formula: "1 if SessionsPerWeek > 3" },
 ];
