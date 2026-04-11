@@ -10,7 +10,6 @@ from backend.ml.feature_engineering import (
     run_feature_engineering,
     add_engagement_score,
     add_progression_rate,
-    add_purchase_frequency,
     add_inactivity_flag,
     add_session_consistency,
     ENGINEERED_FEATURES,
@@ -97,25 +96,6 @@ def test_progression_rate_zero_playtime(edge_zero_playtime):
     result = add_progression_rate(edge_zero_playtime)
     assert np.isfinite(result["ProgressionRate"].iloc[0])
     assert result["ProgressionRate"].iloc[0] == 1 / 1  # level 1 / (0+1)
-
-
-# ─── Purchase Frequency ───
-
-def test_purchase_frequency_with_purchases(sample_player):
-    result = add_purchase_frequency(sample_player)
-    expected = 1 / (10.0 + 1)
-    assert abs(result["PurchaseFrequency"].iloc[0] - expected) < 1e-6
-
-
-def test_purchase_frequency_no_purchases(inactive_player):
-    result = add_purchase_frequency(inactive_player)
-    assert result["PurchaseFrequency"].iloc[0] == 0.0
-
-
-def test_purchase_frequency_zero_playtime(edge_zero_playtime):
-    """Should NOT divide by zero."""
-    result = add_purchase_frequency(edge_zero_playtime)
-    assert np.isfinite(result["PurchaseFrequency"].iloc[0])
 
 
 # ─── Inactivity Flag ───

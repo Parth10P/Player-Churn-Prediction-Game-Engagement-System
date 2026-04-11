@@ -21,13 +21,6 @@ def add_progression_rate(df):
     return df
 
 
-def add_purchase_frequency(df):
-    """Purchase frequency relative to play time."""
-    df = df.copy()
-    df["PurchaseFrequency"] = df["InGamePurchases"] / (df["PlayTimeHours"] + 1)
-    return df
-
-
 def add_inactivity_flag(df):
     """Flag players with very low session count as inactive."""
     df = df.copy()
@@ -46,7 +39,6 @@ def run_feature_engineering(df):
     """Apply all feature engineering steps."""
     df = add_engagement_score(df)
     df = add_progression_rate(df)
-    df = add_purchase_frequency(df)
     df = add_inactivity_flag(df)
     df = add_session_consistency(df)
     return df
@@ -55,7 +47,6 @@ def run_feature_engineering(df):
 ENGINEERED_FEATURES = [
     "EngagementScore",
     "ProgressionRate",
-    "PurchaseFrequency",
     "IsInactive",
     "SessionConsistency",
 ]
