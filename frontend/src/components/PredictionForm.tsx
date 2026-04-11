@@ -26,9 +26,49 @@ export default function PredictionForm({
   setLoading,
 }: Props) {
   const [form, setForm] = useState<PlayerInput>({ ...DEFAULT_PLAYER });
+  const [ageInput, setAgeInput] = useState(String(DEFAULT_PLAYER.Age));
 
   const set = <K extends keyof PlayerInput>(key: K, value: PlayerInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleIntegerInput =
+    <K extends keyof Pick<PlayerInput, "Age" | "PlayerLevel" | "AchievementsUnlocked">>(
+      key: K,
+      min: number,
+      max: number,
+      options?: { useRawState?: boolean }
+    ) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      if (options?.useRawState) {
+        setAgeInput(raw);
+      }
+
+      if (raw === "") {
+        return;
+      }
+
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed)) {
+        return;
+      }
+
+      const next = Math.min(max, Math.max(min, parsed));
+      set(key, next as PlayerInput[K]);
+      if (options?.useRawState && String(next) !== raw && document.activeElement !== e.target) {
+        setAgeInput(String(next));
+      }
+    };
+
+  const handleAgeBlur = () => {
+    const parsed = Number(ageInput);
+    const next =
+      ageInput === "" || Number.isNaN(parsed)
+        ? DEFAULT_PLAYER.Age
+        : Math.min(65, Math.max(15, parsed));
+    set("Age", next);
+    setAgeInput(String(next));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +88,7 @@ export default function PredictionForm({
 
   const handleReset = () => {
     setForm({ ...DEFAULT_PLAYER });
+    setAgeInput(String(DEFAULT_PLAYER.Age));
     toast.info("Form reset to defaults");
   };
 
@@ -64,8 +105,9 @@ export default function PredictionForm({
             className="input-field"
             min={15}
             max={65}
-            value={form.Age}
-            onChange={(e) => set("Age", Number(e.target.value))}
+            value={ageInput}
+            onChange={handleIntegerInput("Age", 15, 65, { useRawState: true })}
+            onBlur={handleAgeBlur}
             required
           />
         </div>
@@ -237,7 +279,7 @@ export default function PredictionForm({
             min={1}
             max={100}
             value={form.PlayerLevel}
-            onChange={(e) => set("PlayerLevel", Number(e.target.value))}
+            onChange={handleIntegerInput("PlayerLevel", 1, 100)}
             required
           />
         </div>
@@ -249,9 +291,7 @@ export default function PredictionForm({
             min={0}
             max={50}
             value={form.AchievementsUnlocked}
-            onChange={(e) =>
-              set("AchievementsUnlocked", Number(e.target.value))
-            }
+            onChange={handleIntegerInput("AchievementsUnlocked", 0, 50)}
             required
           />
         </div>

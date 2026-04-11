@@ -1,7 +1,14 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, accuracy_score, roc_auc_score
+from sklearn.metrics import (
+    classification_report,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+)
 import joblib
 import os
 
@@ -29,13 +36,21 @@ def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
     y_proba = model.predict_proba(X_test)[:, 1]
 
+    metrics = {
+        "Accuracy": accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall": recall_score(y_test, y_pred),
+        "F1 Score": f1_score(y_test, y_pred),
+        "ROC-AUC": roc_auc_score(y_test, y_proba),
+    }
+
     print("\n--- Model Evaluation ---")
-    print(f"Accuracy:  {accuracy_score(y_test, y_pred):.4f}")
-    print(f"ROC AUC:   {roc_auc_score(y_test, y_proba):.4f}")
+    print(f"Accuracy:  {metrics['Accuracy']:.4f}")
+    print(f"ROC AUC:   {metrics['ROC-AUC']:.4f}")
     print("\nClassification Report:")
     print(classification_report(y_test, y_pred, target_names=["Active", "Churned"]))
 
-    return y_pred, y_proba
+    return metrics, y_pred, y_proba
 
 
 def save_model(model, filename="churn_model.pkl"):
@@ -44,6 +59,35 @@ def save_model(model, filename="churn_model.pkl"):
     path = os.path.join(MODELS_DIR, filename)
     joblib.dump(model, path)
     print(f"Model saved to {path}")
+
+
+def save_results(metrics):
+    """Persist evaluation metrics for the backend/API layer."""
+    os.makedirs(os.path.join(os.path.dirname(MODELS_DIR), "models"), exist_ok=True)
+    results_path = os.path.join(os.path.dirname(MODELS_DIR), "models", "logistic_results.txt")
+    with open(results_path, "w", encoding="utf-8") as f:
+        f.write("Logistic Regression Evaluation Metrics\n")
+        f.write("======================================\n")
+        for key, value in metrics.items():
+            f.write(f"{key}: {value:.4f}\n")
+    print(f"Metrics saved to {results_path}")
+
+
+def save_feature_weights(model, feature_names):
+    """Persist signed logistic coefficients for interpretability."""
+    coef = model.coef_[0]
+    weights = pd.DataFrame(
+        {
+            "feature": feature_names,
+            "coefficient": coef,
+            "abs_coefficient": np.abs(coef),
+            "odds_multiplier": np.exp(coef),
+        }
+    ).sort_values("abs_coefficient", ascending=False)
+
+    weights_path = os.path.join(MODELS_DIR, "logistic_feature_weights.csv")
+    weights.to_csv(weights_path, index=False)
+    print(f"Feature weights saved to {weights_path}")
 
 
 def run_training_pipeline():
@@ -69,14 +113,16 @@ def run_training_pipeline():
     model = train_model(X_train_scaled, y_train)
 
     # Evaluate
-    evaluate_model(model, X_test_scaled, y_test)
+    metrics, _, _ = evaluate_model(model, X_test_scaled, y_test)
 
     # Save
     save_model(model)
+    save_results(metrics)
 
     # Save feature names for prediction
     feature_names = list(X_train_scaled.columns)
     joblib.dump(feature_names, os.path.join(MODELS_DIR, "feature_names.pkl"))
+    save_feature_weights(model, feature_names)
     print(f"Feature names saved ({len(feature_names)} features)")
 
     print("\nTraining pipeline complete!")

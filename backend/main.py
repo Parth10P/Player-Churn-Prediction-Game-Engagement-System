@@ -48,6 +48,26 @@ label_encoders = None
 feature_names = None
 
 
+def _ensure_model_loaded():
+    if model is None:
+        raise HTTPException(status_code=503, detail="Model not loaded — run training first")
+
+
+def _build_weight_rows(names, coefficients):
+    rows = []
+    for name, coef in zip(names, coefficients):
+        rows.append(
+            {
+                "feature": name,
+                "coefficient": round(float(coef), 4),
+                "importance": round(float(abs(coef)), 4),
+                "effect": "increases churn risk" if coef > 0 else "reduces churn risk",
+                "odds_multiplier": round(float(np.exp(coef)), 4),
+            }
+        )
+    return sorted(rows, key=lambda item: item["importance"], reverse=True)
+
+
 @app.on_event("startup")
 def load_artifacts():
     """Load ML artifacts into memory when the server starts."""
@@ -142,12 +162,12 @@ def health_check():
 @app.get("/model/info")
 def model_info():
     """Return model metadata."""
-    if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded")
+    _ensure_model_loaded()
     return {
         "model_type": type(model).__name__,
         "n_features": len(feature_names),
         "features": feature_names,
+        "intercept": round(float(model.intercept_[0]), 4),
         "categorical_mappings": {
             col: list(le.classes_) for col, le in label_encoders.items()
         },
@@ -157,8 +177,7 @@ def model_info():
 @app.post("/predict", response_model=PredictionResponse)
 def predict(player: PlayerInput):
     """Predict churn risk for a single player."""
-    if model is None:
-        raise HTTPException(status_code=503, detail="Model not loaded — run training first")
+    _ensure_model_loaded()
 
     try:
         data = player.model_dump()
@@ -239,24 +258,20 @@ def model_compare():
 @app.get("/model/feature-importance")
 def feature_importance():
     """Return Logistic Regression feature importances sorted by importance."""
-    model_path = os.path.join(RESULTS_DIR, "churn_model.pkl")
-    if not os.path.exists(model_path):
-        raise HTTPException(status_code=404, detail="Model not found — run training first")
-
-    model = joblib.load(model_path)
-    names = feature_names
-    if names is None:
-        raise HTTPException(status_code=503, detail="Feature names not loaded")
-
-    # For Logistic Regression, use absolute values of coefficients as importance
-    importances = np.abs(model.coef_[0])
-    # Sort descending
-    indices = np.argsort(importances)[::-1]
-    result = [
-        {"feature": names[i], "importance": round(float(importances[i]), 4)}
-        for i in indices
-    ]
+    _ensure_model_loaded()
+    result = _build_weight_rows(feature_names, model.coef_[0])
     return {"feature_importance": result}
+
+
+@app.get("/model/weights")
+def model_weights():
+    """Return signed Logistic Regression weights for each feature."""
+    _ensure_model_loaded()
+    return {
+        "model_type": type(model).__name__,
+        "intercept": round(float(model.intercept_[0]), 4),
+        "weights": _build_weight_rows(feature_names, model.coef_[0]),
+    }
 
 
 # ---------------------------------------------------------------------------
