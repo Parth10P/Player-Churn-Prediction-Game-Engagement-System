@@ -31,6 +31,7 @@ export interface ModelInfoResponse {
   model_type: string;
   n_features: number;
   features: string[];
+  intercept: number;
   categorical_mappings: Record<string, string[]>;
 }
 
@@ -41,11 +42,20 @@ export interface ModelCompareResponse {
 
 export interface FeatureImportanceItem {
   feature: string;
+  coefficient?: number;
   importance: number;
+  effect?: string;
+  odds_multiplier?: number;
 }
 
 export interface FeatureImportanceResponse {
   feature_importance: FeatureImportanceItem[];
+}
+
+export interface ModelWeightsResponse {
+  model_type: string;
+  intercept: number;
+  weights: FeatureImportanceItem[];
 }
 
 /* ─── Form option helpers ─── */

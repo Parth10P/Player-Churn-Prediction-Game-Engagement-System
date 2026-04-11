@@ -1,5 +1,13 @@
 import axios from "axios";
-import type { PlayerInput, PredictionResponse, HealthResponse, ModelInfoResponse, ModelCompareResponse, FeatureImportanceResponse } from "./types";
+import type {
+  PlayerInput,
+  PredictionResponse,
+  HealthResponse,
+  ModelInfoResponse,
+  ModelCompareResponse,
+  FeatureImportanceResponse,
+  ModelWeightsResponse,
+} from "./types";
 
 const API = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -34,5 +42,11 @@ export async function getModelComparison(): Promise<ModelCompareResponse> {
 /** Get Logistic Regression feature importances */
 export async function getFeatureImportance(): Promise<FeatureImportanceResponse> {
   const res = await API.get<FeatureImportanceResponse>("/model/feature-importance");
+  return res.data;
+}
+
+/** Get signed Logistic Regression weights */
+export async function getModelWeights(): Promise<ModelWeightsResponse> {
+  const res = await API.get<ModelWeightsResponse>("/model/weights");
   return res.data;
 }
