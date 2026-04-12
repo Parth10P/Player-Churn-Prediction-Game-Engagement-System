@@ -1,9 +1,10 @@
 """
-Tests for the Milestone 2 backend agent workflow and endpoint.
+Tests for the internal agent workflow and the optional Ask Agent behavior
+supported by the main /predict endpoint.
 """
 
 from backend.agent.workflow import create_agent_workflow
-from backend.main import AgenticPredictionInput, load_artifacts, predict_agentic
+from backend.main import PredictInput, load_artifacts, predict
 
 
 VALID_PLAYER = {
@@ -39,7 +40,7 @@ def test_agent_workflow_generates_structured_report():
     assert report["confidence_level"] in ("high", "medium", "low")
 
 
-def test_agent_workflow_uses_fallbacks_without_keys():
+def test_agent_workflow_uses_fallbacks_when_llm_is_unavailable():
     agent = create_agent_workflow()
 
     result = agent.invoke({"player_data": VALID_PLAYER})
@@ -49,26 +50,28 @@ def test_agent_workflow_uses_fallbacks_without_keys():
     assert len(result["warnings"]) >= 1
 
 
-def test_predict_agentic_endpoint_returns_structured_response():
+def test_predict_without_query_keeps_agent_fields_empty():
     load_artifacts()
-    response = predict_agentic(
-        AgenticPredictionInput(
+    response = predict(PredictInput(**VALID_PLAYER))
+    payload = response.model_dump()
+
+    assert payload["agent_query"] is None
+    assert payload["agent_answer"] is None
+    assert payload["agent_strategies"] == []
+
+
+def test_predict_with_query_returns_agent_follow_up_fields():
+    load_artifacts()
+    response = predict(
+        PredictInput(
             **{
                 **VALID_PLAYER,
-                "query": "Why is this player likely to churn and how should we retain them?",
+                "query": "Why is this player likely to churn and what should we do next?",
             }
         )
     )
     payload = response.model_dump()
 
-    assert payload["query"]
-    assert "ml_prediction" in payload
-    assert "report" in payload
-    assert "warnings" in payload
-
-    report = payload["report"]
-    assert "executive_summary" in report
-    assert isinstance(report["key_risk_factors"], list)
-    assert isinstance(report["personalized_strategies"], list)
-    assert isinstance(report["industry_best_practices"], list)
-    assert isinstance(report["sources"], list)
+    assert payload["agent_query"]
+    assert isinstance(payload["agent_strategies"], list)
+    assert "recommendations" in payload

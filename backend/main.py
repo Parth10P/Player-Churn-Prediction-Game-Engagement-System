@@ -73,6 +73,19 @@ def _build_weight_rows(names, coefficients):
     return sorted(rows, key=lambda item: item["importance"], reverse=True)
 
 
+def apply_purchase_calibration(probability: float, data: dict) -> float:
+    """
+    Apply a small business-rule calibration on top of the model output.
+
+    Paying users usually show slightly stronger retention than otherwise
+    identical non-paying users, so we nudge the score downward for them.
+    """
+    adjusted = float(probability)
+    if data.get("InGamePurchases", 0) == 1:
+        adjusted = max(0.0, adjusted - 0.05)
+    return min(1.0, adjusted)
+
+
 @app.on_event("startup")
 def load_artifacts():
     """Load ML artifacts into memory when the server starts."""
@@ -166,6 +179,26 @@ def get_recommendations(risk_level: str, data: dict) -> list[str]:
         recs.append("Invite to beta-test new content or features")
 
     return recs
+
+
+def get_enhanced_recommendations(risk_level: str, data: dict) -> list[str]:
+    """
+    Keep the /predict response shape stable while upgrading its recommendation
+    quality with the internal agent workflow when available.
+    """
+    if agent is None:
+        return get_recommendations(risk_level, data)
+
+    try:
+        result = agent.invoke({"player_data": data, "user_query": DEFAULT_QUERY})
+        report = result.get("final_report", {})
+        strategies = report.get("personalized_strategies", [])
+        if isinstance(strategies, list) and strategies:
+            return [str(item) for item in strategies][:5]
+    except Exception as exc:
+        logger.warning("Enhanced recommendation generation failed: %s", exc)
+
+    return get_recommendations(risk_level, data)
 
 
 # ---------------------------------------------------------------------------
