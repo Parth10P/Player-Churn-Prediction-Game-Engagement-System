@@ -119,11 +119,28 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=${{ github.workspace }}" >> $GITHUB_ENV
 
+      - name: Verify imports work
+        run: |
+          python -c "import backend; print('backend imported ok')"
+          python -c "from backend.agent.workflow import create_agent_workflow; print('agent import ok')"
+          python -c "from backend.main import app; print('main import ok')"
+
       - name: Download model artifacts
         uses: actions/download-artifact@v4
         with:
           name: model-artifacts
-          path: backend/models/
+          path: _artifacts/
+
+      - name: Place model artifacts into backend/models
+        run: |
+          mkdir -p backend/models
+          # Handle both flat and nested artifact structures
+          if ls _artifacts/*.pkl >/dev/null 2>&1; then
+            mv _artifacts/* backend/models/
+          elif ls _artifacts/backend/models/*.pkl >/dev/null 2>&1; then
+            mv _artifacts/backend/models/* backend/models/
+          fi
+          rm -rf _artifacts
 
       - name: Verify model artifact layout
         run: |
