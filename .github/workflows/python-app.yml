@@ -133,8 +133,14 @@ jobs:
           test -f backend/models/label_encoders.pkl
           test -f backend/models/feature_names.pkl
 
-      - name: Run backend unit and API tests
-        run: python -m pytest tests/test_preprocess.py tests/test_feature_engineering.py tests/test_agent.py tests/test_api.py -v --tb=short
+      - name: Run preprocess & feature engineering tests
+        run: python -m pytest tests/test_preprocess.py tests/test_feature_engineering.py -v --tb=short
+
+      - name: Run agent tests
+        run: python -m pytest tests/test_agent.py -v --tb=short
+
+      - name: Run API tests
+        run: python -m pytest tests/test_api.py -v --tb=short
 
       - name: Verify all tests passed
         run: echo "✅ All backend tests passed"
