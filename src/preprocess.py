@@ -31,7 +31,6 @@ for col in categorical_cols:
 # Feature engineering (same as backend/ml/feature_engineering.py)
 df["EngagementScore"] = df["SessionsPerWeek"] * df["AvgSessionDurationMinutes"]
 df["ProgressionRate"] = df["PlayerLevel"] / (df["PlayTimeHours"] + 1)
-df["PurchaseFrequency"] = df["InGamePurchases"] / (df["PlayTimeHours"] + 1)
 df["IsInactive"] = (df["SessionsPerWeek"] <= 2).astype(int)
 df["SessionConsistency"] = (df["SessionsPerWeek"] > 3).astype(int)
 

@@ -51,7 +51,6 @@ model = None
 scaler = None
 label_encoders = None
 feature_names = None
-agent = None
 
 
 def _ensure_model_loaded():
@@ -169,28 +168,6 @@ def get_recommendations(risk_level: str, data: dict) -> list[str]:
     return recs
 
 
-def get_enhanced_recommendations(risk_level: str, data: dict) -> list[str]:
-    """
-    Return improved recommendations for the existing /predict endpoint.
-
-    We keep the same API response shape, but if the Milestone 2 agent is
-    available we reuse its personalized strategy generation internally.
-    """
-    if agent is None:
-        return get_recommendations(risk_level, data)
-
-    try:
-        result = agent.invoke({"player_data": data, "user_query": DEFAULT_QUERY})
-        report = result.get("final_report", {})
-        strategies = report.get("personalized_strategies", [])
-        if isinstance(strategies, list) and strategies:
-            return [str(item) for item in strategies][:5]
-    except Exception as exc:
-        logger.warning("Enhanced recommendation generation failed: %s", exc)
-
-    return get_recommendations(risk_level, data)
-
-
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -245,6 +222,7 @@ def predict(player: PredictInput):
         # Predict
         prediction = int(model.predict(df_scaled)[0])
         probability = float(model.predict_proba(df_scaled)[0][1])
+        probability = apply_purchase_calibration(probability, data)
 
         # Risk level
         if probability >= 0.7:

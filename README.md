@@ -35,7 +35,7 @@ Built with **FastAPI** (backend), **Next.js 14** (frontend), and **scikit-learn*
                                            ┌────────┴────────┐
                                             │    Logistic     │
                                             │   Regression    │
-                                            │  (16 features)  │
+                                            │  (15 features)  │
                                             └─────────────────┘
 ```
 
@@ -186,7 +186,7 @@ curl -X POST http://localhost:8000/predict \
 | Accuracy | 88.7% |
 | ROC AUC | 0.93 |
 | Dataset | 40,034 player records |
-| Features | 16 (11 original + 5 engineered) |
+| Features | 15 (11 original + 4 engineered) |
 
 ### Engineered Features
 
@@ -194,7 +194,6 @@ curl -X POST http://localhost:8000/predict \
 |---------|---------|
 | `EngagementScore` | SessionsPerWeek × AvgSessionDurationMinutes |
 | `ProgressionRate` | PlayerLevel / (PlayTimeHours + 1) |
-| `PurchaseFrequency` | InGamePurchases (binary) |
 | `IsInactive` | 1 if SessionsPerWeek ≤ 2, else 0 |
 | `SessionConsistency` | 1 if SessionsPerWeek > 3, else 0 |
 

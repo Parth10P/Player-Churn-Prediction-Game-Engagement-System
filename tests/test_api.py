@@ -90,7 +90,7 @@ class TestModelInfoEndpoint:
     def test_model_info_has_features(self, client):
         data = client.get("/model/info").json()
         assert "features" in data
-        assert len(data["features"]) == 16
+        assert len(data["features"]) == 15
 
     def test_model_info_has_type(self, client):
         data = client.get("/model/info").json()
@@ -144,6 +144,15 @@ class TestPredictValid:
         data = client.post("/predict", json=HIGH_RISK_PLAYER).json()
         # High-risk player should have higher probability
         assert data["churn_probability"] > 0.3
+
+    def test_purchase_toggle_does_not_increase_risk_for_same_player(self, client):
+        non_payer = {**VALID_PLAYER, "InGamePurchases": 0}
+        payer = {**VALID_PLAYER, "InGamePurchases": 1}
+
+        non_payer_prob = client.post("/predict", json=non_payer).json()["churn_probability"]
+        payer_prob = client.post("/predict", json=payer).json()["churn_probability"]
+
+        assert payer_prob <= non_payer_prob
 
 
 # ════════════════════════════════════════════
