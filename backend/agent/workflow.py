@@ -162,12 +162,20 @@ def _derive_risk_factors(player_data: dict[str, Any], prediction: dict[str, Any]
 def _fallback_analysis(player_data: dict[str, Any], prediction: dict[str, Any]) -> tuple[str, list[str], str]:
     factors = _derive_risk_factors(player_data, prediction)
     risk_level = prediction["risk_level"].lower()
+    
+    if prediction["risk_level"] in ("HIGH", "MEDIUM"):
+        momentum_text = "These indicators suggest the player may be losing momentum unless the game provides a short-term reason to return."
+    else:
+        momentum_text = "Their overall engagement is relatively stable, though continued monitoring is recommended."
+
+    factors_summary = " ".join(factors) if factors else "No major warning signs detected."
+
     analysis = (
         f"This player is currently in the {risk_level} churn-risk segment. "
-        f"The strongest warning signs come from session frequency, session quality, progression pace, "
-        f"and commitment signals such as achievements or purchases. "
-        f"These indicators suggest the player may be losing momentum unless the game provides a short-term reason to return."
+        f"{factors_summary} "
+        f"{momentum_text}"
     )
+
     confidence = "high" if prediction["risk_level"] == "HIGH" else "medium"
     return analysis, factors, confidence
 
@@ -241,11 +249,21 @@ def _fallback_report(state: AgentState) -> dict[str, Any]:
         state["player_data"], state["ml_prediction"]
     )
 
+    risk_level = state["ml_prediction"]["risk_level"].lower()
+    prob = state["ml_prediction"]["churn_probability"]
+
+    if state["ml_prediction"]["risk_level"] == "HIGH":
+        action_text = "immediate proactive retention action is highly recommended."
+    elif state["ml_prediction"]["risk_level"] == "MEDIUM":
+        action_text = "proactive retention action is appropriate."
+    else:
+        action_text = "regular engagement monitoring is advised."
+
     return {
         "executive_summary": (
-            f"Player shows {state['ml_prediction']['risk_level'].lower()} churn risk with "
-            f"{state['ml_prediction']['churn_probability']:.1%} predicted probability. "
-            "The current engagement pattern suggests proactive retention action is appropriate."
+            f"Player shows {risk_level} churn risk with "
+            f"{prob:.1%} predicted probability. "
+            f"The current engagement pattern suggests {action_text}"
         ),
         "engagement_analysis": state["engagement_analysis"],
         "key_risk_factors": state["key_risk_factors"],
