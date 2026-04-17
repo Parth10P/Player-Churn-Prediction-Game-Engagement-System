@@ -21,8 +21,7 @@ interface Props {
   playerData: PlayerInput | null;
 }
 
-const DEFAULT_AGENT_QUERY =
-  "Why is this player likely to churn and what are the best ways to retain them?";
+const DEFAULT_AGENT_QUERY = "";
 
 export default function ResultsDisplay({ result, loading, playerData }: Props) {
   const [agentQuery, setAgentQuery] = useState(DEFAULT_AGENT_QUERY);

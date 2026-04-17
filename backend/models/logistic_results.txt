@@ -1,7 +1,7 @@
 Logistic Regression Evaluation Metrics
 ======================================
-Accuracy: 0.8872
-Precision: 0.7311
-Recall: 0.8901
-F1 Score: 0.8028
+Accuracy: 0.8875
+Precision: 0.7313
+Recall: 0.8910
+F1 Score: 0.8033
 ROC-AUC: 0.9288

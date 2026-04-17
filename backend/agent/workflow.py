@@ -329,6 +329,7 @@ Industry research:
 
 Return valid JSON with this exact shape:
 {{
+  "direct_answer_to_user": "Clear, direct paragraph directly answering the User question",
   "executive_summary": "2-3 sentence overview",
   "engagement_analysis": "clear explanation",
   "key_risk_factors": ["factor 1", "factor 2"],
@@ -468,6 +469,7 @@ class ChurnAgent:
             if not isinstance(payload, dict) or "executive_summary" not in payload:
                 raise ValueError("LLM returned incomplete report payload")
 
+            payload["direct_answer_to_user"] = str(payload.get("direct_answer_to_user", ""))
             payload["personalized_strategies"] = [
                 str(item) for item in payload.get("personalized_strategies", personalized_strategies)
             ][:5]
@@ -513,7 +515,7 @@ def _build_llm_client():
     if not api_key or ChatGroq is None:
         return None
 
-    model_name = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+    model_name = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     try:
         return ChatGroq(
             model=model_name,

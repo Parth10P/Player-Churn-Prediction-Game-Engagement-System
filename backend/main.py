@@ -336,11 +336,15 @@ def ask_agent(query_input: AgentQueryInput):
         report = result.get("final_report", {})
 
         # Build answer from report sections
-        answer_parts = [
-            report.get("executive_summary", ""),
-            report.get("engagement_analysis", ""),
-        ]
-        combined = " ".join(part.strip() for part in answer_parts if part)
+        direct_answer = report.get("direct_answer_to_user", "")
+        if direct_answer:
+            combined = direct_answer
+        else:
+            answer_parts = [
+                report.get("executive_summary", ""),
+                report.get("engagement_analysis", ""),
+            ]
+            combined = " ".join(part.strip() for part in answer_parts if part)
 
         strategies = report.get("personalized_strategies", [])
         if not isinstance(strategies, list):
