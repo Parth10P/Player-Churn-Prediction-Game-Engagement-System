@@ -50,13 +50,16 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Keywords that indicate a gaming / churn / engagement related question
-_RELEVANT_KEYWORDS = [
+_RELEVANT_KEYWORDS = {
     "churn", "player", "game", "gaming", "engagement", "retention", "session",
-    "play", "level", "achievement", "purchase", "risk", "inactive", "active", 
-    "quit", "leave", "comeback", "reward", "progression", "difficulty", "genre",
-    "behavior", "behaviour", "disengaged", "monetization", "spending", 
-    "revenue", "loyalty", "win", "lose", "lost"
-]
+    "play", "level", "achievement", "purchase", "risk", "score", "strategy",
+    "recommend", "inactive", "active", "quit", "leave", "return", "comeback",
+    "reward", "offer", "notification", "progression", "difficulty", "genre",
+    "duration", "frequency", "behavior", "behaviour", "predict", "analysis",
+    "why", "how", "what", "factor", "reason", "cause", "improve", "reduce",
+    "increase", "decrease", "save", "lose", "losing", "engaged", "disengaged",
+    "monetization", "spending", "revenue", "ltv", "lifetime", "loyalty",
+}
 
 _OFF_TOPIC_RESPONSE = (
     "I'm specialized in player churn analysis and game engagement strategies. "
@@ -74,11 +77,11 @@ def _is_relevant_query(query: str | None) -> bool:
 
     # Extract clean words, removing punctuation
     words = set(re.findall(r'\b\w+\b', query.lower()))
-    
+
     # Exact match check first
-    if bool(words & set(_RELEVANT_KEYWORDS)):
+    if bool(words & _RELEVANT_KEYWORDS):
         return True
-        
+
     # Check for spelling mistakes using fuzzy matching
     for word in words:
         if len(word) >= 4:  # Only fuzzy match longer words to prevent false positives
