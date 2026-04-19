@@ -349,6 +349,7 @@ def _build_query_focused_answer(user_query: str | None, player_data: dict[str, A
     )
 
 
+
 def _fallback_report(state: AgentState) -> dict[str, Any]:
     best_practices = state.get("industry_best_practices") or _local_best_practices(
         state["player_data"], state["ml_prediction"]
