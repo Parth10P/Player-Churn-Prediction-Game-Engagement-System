@@ -13,9 +13,11 @@ The module is intentionally resilient:
 
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import os
+import re
 from typing import Any, TypedDict
 
 import pandas as pd
@@ -48,16 +50,13 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Keywords that indicate a gaming / churn / engagement related question
-_RELEVANT_KEYWORDS = {
+_RELEVANT_KEYWORDS = [
     "churn", "player", "game", "gaming", "engagement", "retention", "session",
-    "play", "level", "achievement", "purchase", "risk", "score", "strategy",
-    "recommend", "inactive", "active", "quit", "leave", "return", "comeback",
-    "reward", "offer", "notification", "progression", "difficulty", "genre",
-    "duration", "frequency", "behavior", "behaviour", "predict", "analysis",
-    "why", "how", "what", "factor", "reason", "cause", "improve", "reduce",
-    "increase", "decrease", "save", "lose", "losing", "engaged", "disengaged",
-    "monetization", "spending", "revenue", "ltv", "lifetime", "loyalty",
-}
+    "play", "level", "achievement", "purchase", "risk", "inactive", "active", 
+    "quit", "leave", "comeback", "reward", "progression", "difficulty", "genre",
+    "behavior", "behaviour", "disengaged", "monetization", "spending", 
+    "revenue", "loyalty", "win", "lose", "lost"
+]
 
 _OFF_TOPIC_RESPONSE = (
     "I'm specialized in player churn analysis and game engagement strategies. "
@@ -68,11 +67,26 @@ _OFF_TOPIC_RESPONSE = (
 
 
 def _is_relevant_query(query: str | None) -> bool:
-    """Return True if the query is related to gaming / churn / engagement."""
+    """Return True if the query is related to gaming / churn / engagement.
+       Handles spelling mistakes via fuzzy matching."""
     if not query or not query.strip():
         return True  # empty query = use default dynamic query
-    words = set(query.lower().split())
-    return bool(words & _RELEVANT_KEYWORDS)
+
+    # Extract clean words, removing punctuation
+    words = set(re.findall(r'\b\w+\b', query.lower()))
+    
+    # Exact match check first
+    if bool(words & set(_RELEVANT_KEYWORDS)):
+        return True
+        
+    # Check for spelling mistakes using fuzzy matching
+    for word in words:
+        if len(word) >= 4:  # Only fuzzy match longer words to prevent false positives
+            matches = difflib.get_close_matches(word, _RELEVANT_KEYWORDS, n=1, cutoff=0.75)
+            if matches:
+                return True
+
+    return False
 
 
 def get_dynamic_query(risk_level: str) -> str:
